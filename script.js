@@ -1,4 +1,22 @@
-// script.js
+// // script.js
+
+// buttons and form
+let clearread = document.querySelectorAll("#button-group button");
+let generate = document.querySelector("button[type=submit]");
+let form = document.getElementById("generate-meme");
+
+// canvas
+let cvs = document.getElementById('user-image');
+let context = cvs.getContext('2d');
+let input = document.getElementById('image-input');
+
+// volume and reading stuff
+let volume = document.getElementById('volume-group');
+let voiceSelect = document.getElementById('voice-selection');
+let synth = window.speechSynthesis;
+let voices = [];
+
+
 
 const img = new Image(); // used to load image from <input> and draw to canvas
 
@@ -6,10 +24,140 @@ const img = new Image(); // used to load image from <input> and draw to canvas
 img.addEventListener('load', () => {
   // TODO
 
+  
+  // clear canvas
+  context.clearRect(0,0,400,400);
+
+  // button toggle
+  generate.disabled = false;
+  clearread[0].disabled = true;
+  clearread[1].disabled = true;
+  
+  // fill with black
+  context.fillStyle = "black";
+  context.fillRect(0,0,400,400);
+
+  // draw image
+  let dimensions = getDimmensions(400, 400, img.width, img.height);
+  console.log(dimensions);
+  context.drawImage(img, dimensions.startX, dimensions.startY, dimensions.width, dimensions.height);
+
+
+
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
   // - Clear the form when a new image is selected
   // - If you draw the image to canvas here, it will update as soon as a new image is selected
+});
+
+input.addEventListener('change', () => {
+  let url = URL.createObjectURL(input.files[0]);
+  img.src = url;
+  img.alt = input.files[0].name;
+});
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  // get text
+  let top = document.getElementById("text-top").value;
+  let bottom = document.getElementById("text-bottom").value;
+  
+  // text styling
+  context.font = "30px Papyrus";
+  context.fillStyle = "white";
+  context.textAlign = "center";
+  context.fillText(top, 200, 50);
+  context.fillText(bottom, 200, 370);
+  
+  // button toggle
+  generate.disabled = true;
+  clearread[0].disabled = false;
+  clearread[1].disabled = false;
+});
+
+let clear = clearread[0];
+let read = clearread[1];
+
+clear.addEventListener('click', () => {
+  
+  // clear canvas
+  context.clearRect(0, 0, 400, 400);
+
+  //disable buttons
+  generate.disabled = false;
+  clear.disabled = true;
+  read.disabled = true;
+});
+
+
+function populateVoiceList() {
+  voiceSelect.remove(0);
+  voices = synth.getVoices();
+  voiceSelect.disabled = false;
+
+  for(var i = 0; i < voices.length ; i++) {
+    var option = document.createElement('option');
+    option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+
+    if(voices[i].default) {
+      option.textContent += ' -- DEFAULT';
+    }
+
+    option.setAttribute('data-lang', voices[i].lang);
+    option.setAttribute('data-name', voices[i].name);
+    voiceSelect.appendChild(option);
+  }
+}
+
+populateVoiceList();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = populateVoiceList;
+}
+
+
+read.addEventListener('click', (e) => {
+  e.preventDefault();
+
+
+  let toptext = document.getElementById("text-top").value;
+  let bottomtext = document.getElementById("text-bottom").value;
+
+  let toputterance = new SpeechSynthesisUtterance(toptext);
+  let bottomutterance = new SpeechSynthesisUtterance(bottomtext);
+
+  let voicetouse = voiceSelect.selectedOptions[0].getAttribute('data-name');
+  
+  for(var i = 0; i < voices.length ; i++) {
+    if(voices[i].name === voicetouse) {
+      toputterance.voice = voices[i];
+      bottomutterance.voice = voices[i];
+    }
+  }
+  
+  // adjust volumes and speak
+  let vol = document.querySelector("input[type=range]");
+  toputterance.volume = (vol.value)/100;
+  bottomutterance.volume = (vol.value)/100;
+  speechSynthesis.speak(toputterance);
+  speechSynthesis.speak(bottomutterance);
+  
+})
+
+volume.addEventListener('input', (e) => {
+  let volrange = document.querySelector('input[type=range]').value;
+
+  if (volrange == 0){
+    document.querySelector('#volume-group img').src = 'icons/volume-level-0.svg';
+  }
+  else if (volrange <= 33){
+    document.querySelector('#volume-group img').src = 'icons/volume-level-1.svg';
+  }
+  else if (volrange <= 66){
+    document.querySelector('#volume-group img').src = 'icons/volume-level-2.svg';
+  }
+  else {
+    document.querySelector('#volume-group img').src = 'icons/volume-level-3.svg';
+  }
 });
 
 /**
@@ -51,3 +199,4 @@ function getDimmensions(canvasWidth, canvasHeight, imageWidth, imageHeight) {
 
   return { 'width': width, 'height': height, 'startX': startX, 'startY': startY }
 }
+
