@@ -9,4 +9,6 @@ https://h2duong.github.io/Lab5/
 
 ## Part 2:
 
-LINK TO YOUR PART 2 REPOSITORY
+https://github.com/h2duong/github-actions-for-ci/issues/7#issue-873803992
+
+https://github.com/h2duong/github-actions-for-ci
